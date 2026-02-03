@@ -2,8 +2,6 @@
 
 **CryptoPulse** is a high-performance, professional cryptocurrency dashboard built with JavaFX. It provides real-time market data updates, a sleek glassmorphism-inspired UI, and automated syncing to keep you informed of the latest market trends.
 
-![CryptoPulse Screenshot](https://via.placeholder.com/800x600?text=CryptoPulse+Dashboard+Preview)
-
 ## ✨ Features
 
 - **Real-Time Market Data**: Live price updates for top cryptocurrencies via the CoinGecko API.
