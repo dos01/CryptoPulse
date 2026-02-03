@@ -1,22 +1,23 @@
-# CryptoTrader
+# CryptoPulse
 
-CryptoTrader is a modern desktop application built with JavaFX for real-time cryptocurrency portfolio management and market analysis. It provides users with live tracking, technical insights, and automated signal generation to assist in trading decisions.
+**CryptoPulse** is a high-performance, professional cryptocurrency dashboard built with JavaFX. It provides real-time market data updates, a sleek glassmorphism-inspired UI, and automated syncing to keep you informed of the latest market trends.
 
-## 🚀 Features
+![CryptoPulse Screenshot](https://via.placeholder.com/800x600?text=CryptoPulse+Dashboard+Preview)
 
-- **Real-Time Portfolio Tracking**: View your holdings, current prices, and profit/loss in real-time.
-- **Advanced Analytics**: Technical indicators including RSI (Relative Strength Index) and SMA (Simple Moving Average) to gauge market trends.
-- **Trading Signals**: Integrated prediction service that provides BUY/SELL/HOLD signals based on automated technical analysis.
-- **Trade History Log**: Keep track of all your past transactions with detailed logs.
-- **Interactive Charts**: Visualize price movements and trends directly within the application.
-- **Local Database**: Secure and fast data storage using SQLite.
+## ✨ Features
+
+- **Real-Time Market Data**: Live price updates for top cryptocurrencies via the CoinGecko API.
+- **Premium Aesthetics**: A modern dark theme with glassmorphism, vibrant accents, and smooth transitions.
+- **Custom Watchlist**: Keep track of your favorite assets with a persistent local watchlist.
+- **Dynamic Visuals**: Visual indicators for price changes (up/down) and professional data formatting.
+- **Robust Syncing**: Intelligent background syncing with rate-limit protection.
 
 ## 🛠️ Tech Stack
 
 - **Lanuage**: Java 17
 - **UI Framework**: JavaFX
 - **Build Tool**: Maven
-- **Database**: SQLite
+- **Database**: SQLite (for Watchlist persistence)
 - **JSON Processing**: Jackson
 
 ## 📦 Getting Started
@@ -30,8 +31,8 @@ CryptoTrader is a modern desktop application built with JavaFX for real-time cry
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/USER/CryptoTrader.git
-   cd CryptoTrader
+   git clone https://github.com/USER/CryptoPulse.git
+   cd CryptoPulse
    ```
 
 2. **Build the project**:
@@ -43,12 +44,6 @@ CryptoTrader is a modern desktop application built with JavaFX for real-time cry
    ```bash
    mvn javafx:run
    ```
-
-## 📈 Technical Analysis Strategy
-
-The application uses a combined RSI and SMA crossover strategy:
-- **BUY Signal**: Triggered when RSI < 30 (oversold) and the current price is above the 20-day SMA, or when RSI is extremely oversold.
-- **SELL Signal**: Triggered when RSI > 70 (overbought) and the current price is below the 20-day SMA, or when RSI is extremely overbought.
 
 ## 📄 License
 

@@ -8,10 +8,14 @@ import javafx.beans.property.StringProperty;
 public class CoinModel {
     private final StringProperty name;
     private final DoubleProperty price;
+    private final DoubleProperty change24h;
+    private final StringProperty marketCap;
 
-    public CoinModel(String name, double price) {
+    public CoinModel(String name, double price, double change24h, String marketCap) {
         this.name = new SimpleStringProperty(name);
         this.price = new SimpleDoubleProperty(price);
+        this.change24h = new SimpleDoubleProperty(change24h);
+        this.marketCap = new SimpleStringProperty(marketCap);
     }
 
     public String getName() {
@@ -22,10 +26,6 @@ public class CoinModel {
         return name;
     }
 
-    public void setName(String name) {
-        this.name.set(name);
-    }
-
     public double getPrice() {
         return price.get();
     }
@@ -34,21 +34,19 @@ public class CoinModel {
         return price;
     }
 
-    public void setPrice(double price) {
-        this.price.set(price);
+    public double getChange24h() {
+        return change24h.get();
     }
 
-    private final StringProperty signal = new SimpleStringProperty("WAIT");
-
-    public String getSignal() {
-        return signal.get();
+    public DoubleProperty change24hProperty() {
+        return change24h;
     }
 
-    public StringProperty signalProperty() {
-        return signal;
+    public String getMarketCap() {
+        return marketCap.get();
     }
 
-    public void setSignal(String signal) {
-        this.signal.set(signal);
+    public StringProperty marketCapProperty() {
+        return marketCap;
     }
 }

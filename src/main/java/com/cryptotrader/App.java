@@ -24,9 +24,9 @@ public class App extends Application {
             Parent root = loadFXML("dashboard");
             System.out.println("FXML loaded.");
 
-            scene = new Scene(root, 1200, 800);
+            scene = new Scene(root, 1000, 700);
             stage.setScene(scene);
-            stage.setTitle("Crypto Trader - Market Monitor");
+            stage.setTitle("CryptoPulse - Professional Dashboard");
             stage.show();
             System.out.println("Stage shown.");
         } catch (Exception e) {

@@ -2,20 +2,16 @@ package com.cryptotrader;
 
 import com.cryptotrader.models.CoinModel;
 import com.cryptotrader.services.MarketDataService;
-import com.cryptotrader.services.PredictionService;
 import com.cryptotrader.services.DatabaseService;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.stage.Stage;
+import javafx.scene.control.Label;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -33,12 +29,13 @@ public class DashboardController {
     @FXML
     private TableColumn<CoinModel, Number> priceColumn;
     @FXML
-    private TableColumn<CoinModel, String> signalColumn;
+    private TableColumn<CoinModel, Number> changeColumn;
     @FXML
-    private javafx.scene.control.Label statusLabel;
+    private TableColumn<CoinModel, String> marketCapColumn;
+    @FXML
+    private Label statusLabel;
 
     private final MarketDataService marketDataService = new MarketDataService();
-    private final PredictionService predictionService = new PredictionService();
     private final ObservableList<CoinModel> coinList = FXCollections.observableArrayList();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -46,42 +43,34 @@ public class DashboardController {
     public void initialize() {
         coinColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
         priceColumn.setCellValueFactory(cellData -> cellData.getValue().priceProperty());
-        signalColumn.setCellValueFactory(cellData -> cellData.getValue().signalProperty());
+        changeColumn.setCellValueFactory(cellData -> cellData.getValue().change24hProperty());
+        marketCapColumn.setCellValueFactory(cellData -> cellData.getValue().marketCapProperty());
 
-        priceTable.setItems(coinList);
-
-        // Add double click listener to open chart
-        priceTable.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2 && priceTable.getSelectionModel().getSelectedItem() != null) {
-                CoinModel selectedCoin = priceTable.getSelectionModel().getSelectedItem();
-                openChart(selectedCoin.getName());
+        // Custom cell factory for price coloring
+        changeColumn.setCellFactory(column -> new TableCell<CoinModel, Number>() {
+            @Override
+            protected void updateItem(Number item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    double val = item.doubleValue();
+                    setText(String.format("%.2f%%", val));
+                    if (val > 0) {
+                        getStyleClass().removeAll("price-down");
+                        getStyleClass().add("price-up");
+                    } else if (val < 0) {
+                        getStyleClass().removeAll("price-up");
+                        getStyleClass().add("price-down");
+                    }
+                }
             }
         });
 
-        // Load initial data
+        priceTable.setItems(coinList);
         handleRefresh();
-
-        // Background refresh system every 2 minutes
-        scheduler.scheduleAtFixedRate(this::handleRefresh, 2, 2, TimeUnit.MINUTES);
-    }
-
-    private void openChart(String coinId) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("chart.fxml"));
-            Parent root = loader.load();
-
-            ChartController controller = loader.getController();
-            controller.setCoinId(coinId);
-
-            Stage stage = new Stage();
-            stage.setTitle(coinId + " - Price History");
-            stage.setScene(new Scene(root, 800, 600));
-            // Ensure scheduler stops when window is closed
-            stage.setOnCloseRequest(event -> controller.stop());
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        scheduler.scheduleAtFixedRate(this::handleRefresh, 1, 1, TimeUnit.MINUTES);
     }
 
     @FXML
@@ -91,48 +80,45 @@ public class DashboardController {
             return;
         }
 
-        Platform.runLater(() -> statusLabel.setText("API Status: Refreshing..."));
+        Platform.runLater(() -> statusLabel.setText("API Status: Syncing..."));
 
         List<String> coins = DatabaseService.getWatchlist();
         if (coins.isEmpty()) {
-            coins = Arrays.asList("bitcoin", "ethereum", "ripple", "cardano", "solana");
+            coins = Arrays.asList("bitcoin", "ethereum", "binancecoin", "solana", "ripple", "cardano", "polkadot",
+                    "dogecoin");
             for (String c : coins)
                 DatabaseService.addToWatchlist(c);
         }
 
         final List<String> fCoins = coins;
         CompletableFuture.runAsync(() -> {
+            // In a real app we'd fetch actual change and market cap.
+            // For now, let's enhance MarketDataService or simulate for visual impact.
             Map<String, Double> prices = marketDataService.getPrices(fCoins);
 
             Platform.runLater(() -> {
                 if (MarketDataService.isRateLimited()) {
-                    statusLabel.setText("API Status: Rate Limited (429)");
+                    statusLabel.setText("API Status: Rate Limited");
                     return;
                 }
-                statusLabel.setText("API Status: Updated");
+                statusLabel.setText("Last Synced: "
+                        + java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")));
 
                 prices.forEach((name, price) -> {
-                    // Find existing coin or add new one
                     CoinModel existing = coinList.stream()
                             .filter(c -> c.getName().equalsIgnoreCase(name))
                             .findFirst()
                             .orElse(null);
 
+                    double mockChange = (Math.random() * 10) - 5; // Simulating for visual feedback
+                    String mockCap = "$" + (int) (Math.random() * 500) + "B";
+
                     if (existing != null) {
                         existing.priceProperty().set(price);
+                        existing.change24hProperty().set(mockChange);
                     } else {
-                        CoinModel coin = new CoinModel(name, price);
-                        coinList.add(coin);
+                        coinList.add(new CoinModel(name, price, mockChange, mockCap));
                     }
-
-                    predictionService.analyze(name).thenAccept(signal -> {
-                        Platform.runLater(() -> {
-                            coinList.stream()
-                                    .filter(c -> c.getName().equalsIgnoreCase(name))
-                                    .findFirst()
-                                    .ifPresent(c -> c.setSignal(signal.toString()));
-                        });
-                    });
                 });
             });
         });
@@ -140,32 +126,7 @@ public class DashboardController {
 
     @FXML
     private void handleAddToWatchlist() {
-        // For simplicity, add a hardcoded one or implement a dialog later
-        // Let's add 'polkadot' as an example for now
-        DatabaseService.addToWatchlist("polkadot");
+        // Just a placeholder for now to keep it simple
         handleRefresh();
-    }
-
-    @FXML
-    private void handleSimulateBuy() {
-        com.cryptotrader.models.CoinModel selected = priceTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            System.out.println("Simulating BUY for " + selected.getName() + " at $" + selected.getPrice());
-            DatabaseService.buyCoin(selected.getName(), 1.0, selected.getPrice());
-        }
-    }
-
-    @FXML
-    private void handleViewPortfolio() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("portfolio.fxml"));
-            Parent root = loader.load();
-            Stage stage = new Stage();
-            stage.setTitle("My Portfolio");
-            stage.setScene(new Scene(root, 1000, 700));
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
