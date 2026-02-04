@@ -34,6 +34,8 @@ public class DashboardController {
     private TableColumn<CoinModel, String> marketCapColumn;
     @FXML
     private Label statusLabel;
+    @FXML
+    private Label topGainerLabel;
 
     private final MarketDataService marketDataService = new MarketDataService();
     private final ObservableList<CoinModel> coinList = FXCollections.observableArrayList();
@@ -43,6 +45,18 @@ public class DashboardController {
     public void initialize() {
         coinColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
         priceColumn.setCellValueFactory(cellData -> cellData.getValue().priceProperty());
+        priceColumn.setCellFactory(column -> new TableCell<CoinModel, Number>() {
+            @Override
+            protected void updateItem(Number item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("$%,.2f", item.doubleValue()));
+                }
+            }
+        });
+
         changeColumn.setCellValueFactory(cellData -> cellData.getValue().change24hProperty());
         marketCapColumn.setCellValueFactory(cellData -> cellData.getValue().marketCapProperty());
 
@@ -56,13 +70,14 @@ public class DashboardController {
                     setGraphic(null);
                 } else {
                     double val = item.doubleValue();
-                    setText(String.format("%.2f%%", val));
+                    setText(String.format("%s%.2f%%", (val > 0 ? "+" : ""), val));
+                    getStyleClass().removeAll("text-success", "text-danger", "text-neutral");
                     if (val > 0) {
-                        getStyleClass().removeAll("price-down");
-                        getStyleClass().add("price-up");
+                        getStyleClass().add("text-success");
                     } else if (val < 0) {
-                        getStyleClass().removeAll("price-up");
-                        getStyleClass().add("price-down");
+                        getStyleClass().add("text-danger");
+                    } else {
+                        getStyleClass().add("text-neutral");
                     }
                 }
             }
@@ -110,8 +125,8 @@ public class DashboardController {
                             .findFirst()
                             .orElse(null);
 
-                    double mockChange = (Math.random() * 10) - 5; // Simulating for visual feedback
-                    String mockCap = "$" + (int) (Math.random() * 500) + "B";
+                    double mockChange = (Math.random() * 10) - 5;
+                    String mockCap = "$" + (100 + (int) (Math.random() * 400)) + "B";
 
                     if (existing != null) {
                         existing.priceProperty().set(price);
@@ -120,6 +135,15 @@ public class DashboardController {
                         coinList.add(new CoinModel(name, price, mockChange, mockCap));
                     }
                 });
+
+                // Update Top Gainer Card
+                coinList.stream()
+                        .max((c1, c2) -> Double.compare(c1.getChange24h(), c2.getChange24h()))
+                        .ifPresent(top -> {
+                            topGainerLabel.setText(String.format("%s (+%.2f%%)",
+                                    top.getName().substring(0, 1).toUpperCase() + top.getName().substring(1),
+                                    top.getChange24h()));
+                        });
             });
         });
     }
